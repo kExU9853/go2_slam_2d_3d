@@ -62,7 +62,7 @@ using namespace std;
 
 typedef pcl::PointXYZI PointType;
 
-enum class SensorType { VELODYNE, OUSTER, LIVOX };
+enum class SensorType { VELODYNE, OUSTER, LIVOX, HESAI };
 
 class ParamServer : public rclcpp::Node
 {
@@ -201,6 +201,10 @@ public:
         {
             sensor = SensorType::LIVOX;
         }
+        else if (sensorStr == "hesai")
+        {
+            sensor = SensorType::HESAI;
+        }
         else
         {
             RCLCPP_ERROR_STREAM(
@@ -208,6 +212,7 @@ public:
                 "Invalid sensor type (must be either 'velodyne' or 'ouster' or 'livox'): " << sensorStr);
             rclcpp::shutdown();
         }
+        RCLCPP_DEBUG(get_logger(), "LiDAR sensor type : ", sensorStr.c_str());
 
         declare_parameter("N_SCAN", 64);
         get_parameter("N_SCAN", N_SCAN);

@@ -30,7 +30,7 @@ def generate_launch_description():
             parameters=[parameter_file],
             output='screen'
             ),
-        #Node(
+        # Node(
         #    package='robot_state_publisher',
         #    executable='robot_state_publisher',
         #    name='robot_state_publisher',
@@ -38,14 +38,14 @@ def generate_launch_description():
         #    parameters=[{
         #        'robot_description': Command(['xacro', ' ', xacro_path])
         #    }]
-        #),
-        #Node(
+        # ),
+        # Node(
         #     package='lio_sam',
         #     executable='lio_sam_imuPreintegration',
         #     name='lio_sam_imuPreintegration',
         #     parameters=[parameter_file],
         #     output='screen'
-        #),
+        # ),
         Node(
             package='lio_sam',
             executable='lio_sam_imageProjection',

@@ -30,6 +30,25 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(OusterPointXYZIRT,
     (uint8_t, ring, ring) (uint16_t, noise, noise) (uint32_t, range, range)
 )
 
+struct HesaiPointXYZIRT
+{
+    PCL_ADD_POINT4D;      // x, y, z, padding
+    float intensity;
+    uint16_t ring;
+    double timestamp;     // 注意用 double 对应 ROS 消息里的 timestamp 字段
+
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+} EIGEN_ALIGN16;
+// 注册点结构体，字段名称必须和ROS消息字段名对应
+POINT_CLOUD_REGISTER_POINT_STRUCT(HesaiPointXYZIRT,
+    (float, x, x)
+    (float, y, y)
+    (float, z, z)
+    (float, intensity, intensity)
+    (uint16_t, ring, ring)
+    (double, timestamp, timestamp)
+)
+  
 // Use the Velodyne point format as a common representation
 using PointXYZIRT = VelodynePointXYZIRT;
 
@@ -71,6 +90,7 @@ private:
 
     pcl::PointCloud<PointXYZIRT>::Ptr laserCloudIn;
     pcl::PointCloud<OusterPointXYZIRT>::Ptr tmpOusterCloudIn;
+    pcl::PointCloud<HesaiPointXYZIRT>::Ptr tmpHesaiCloudIn;
     pcl::PointCloud<PointType>::Ptr   fullCloud;
     pcl::PointCloud<PointType>::Ptr   extractedCloud;
 
@@ -136,6 +156,7 @@ public:
     {
         laserCloudIn.reset(new pcl::PointCloud<PointXYZIRT>());
         tmpOusterCloudIn.reset(new pcl::PointCloud<OusterPointXYZIRT>());
+        tmpHesaiCloudIn.reset(new pcl::PointCloud<HesaiPointXYZIRT>());
         fullCloud.reset(new pcl::PointCloud<PointType>());
         extractedCloud.reset(new pcl::PointCloud<PointType>());
 
@@ -252,6 +273,26 @@ public:
                 dst.time = src.t * 1e-9f;
             }
         }
+        else if (sensor == SensorType::HESAI)
+        {
+            // Convert to Velodyne format
+            pcl::moveFromROSMsg(currentCloudMsg, *tmpHesaiCloudIn);
+            laserCloudIn->points.resize(tmpHesaiCloudIn->size());
+            laserCloudIn->is_dense = tmpHesaiCloudIn->is_dense;
+            for (size_t i = 0; i < tmpHesaiCloudIn->size(); i++)
+            {
+                auto &src = tmpHesaiCloudIn->points[i];
+                auto &dst = laserCloudIn->points[i];
+                dst.x = src.x;
+                dst.y = src.y;
+                dst.z = src.z;
+                dst.intensity = src.intensity;
+                dst.ring = src.ring;
+                // What is velodyne? 2035 year?
+                // RCLCPP_ERROR_STREAM(get_logger(), "Timestamp is: " << src.timestamp);
+                dst.time = src.timestamp;
+            }
+        }
         else
         {
             RCLCPP_ERROR_STREAM(get_logger(), "Unknown sensor type: " << int(sensor));
@@ -322,6 +363,7 @@ public:
             RCLCPP_INFO(get_logger(), "Waiting for IMU data ...");
             return false;
         }
+        
 
         imuDeskewInfo();
 

@@ -54,7 +54,7 @@ def generate_launch_description():
         parameters=[{
             'target_frame': 'rslidar',
             'transform_tolerance': 0.01,
-            'min_height': -0.3,
+            'min_height': -0.01,   # -0.3 -0.05
             'max_height': 3.0,
             'angle_min': -3.142, #-1.5708,  # -M_PI/2
             'angle_max': 3.142, #1.5708,  # M_PI/2
@@ -66,6 +66,28 @@ def generate_launch_description():
             'inf_epsilon': 1.0
         }],
         name='pointcloud_to_laserscan_rslidar'
+    )
+
+
+    pointcloud_to_laserscan_utlidar = Node(
+        package='pointcloud_to_laserscan', executable='pointcloud_to_laserscan_node',
+        remappings=[('cloud_in', [LaunchConfiguration(variable_name='scanner'), '/utlidar/cloud_deskewed']),
+                    ('scan', [LaunchConfiguration(variable_name='scanner'), '/scan_utlidar'])],
+        parameters=[{
+            'target_frame': 'odom',
+            'transform_tolerance': 0.01,
+            'min_height': 0.1,   # -0.3 -0.05
+            'max_height': 3.0,   # Notice all need . to be double
+            'angle_min': -3.142, #-1.5708,  # -M_PI/2
+            'angle_max': 3.142, #1.5708,  # M_PI/2
+            'angle_increment': 0.003141593, #0.0087,  # M_PI/360.0
+            'scan_time': 0.1, #0.3333,
+            'range_min': 0.1,
+            'range_max': 10.0,
+            'use_inf': False,
+            'inf_epsilon': 1.0
+        }],
+        name='pointcloud_to_laserscan_utlidar'
     )
 
     odom_to_tf_node = Node(
@@ -94,9 +116,10 @@ def generate_launch_description():
         go2_joints_pub,
         robot_state_pub,
         pointcloud_to_laserscan_node2,
+        pointcloud_to_laserscan_utlidar,
         odom_to_tf_node,
         joints_state_node,
-        # hesai_lidar_launch_include, # Uncomment when using pointcloud from HESAI Lidar
+        hesai_lidar_launch_include, # Uncomment when using pointcloud from HESAI Lidar
         lio_sam_launch_include,
         rviz_node
     ])

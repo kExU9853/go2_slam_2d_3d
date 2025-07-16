@@ -3,8 +3,8 @@
 
     # Topics
     pointCloudTopic: "rslidar_points"                   # Point cloud data
-    imuTopic: "/dog_imu_raw"                        # IMU data
-    odomTopic: "dog_odom"                    # IMU pre-preintegration odometry, same frequency as IMU
+    imuTopic: "dog_imu_raw"                        # IMU data /go2/imu: by ourself via API.  /utlidar/imu dog_imu_link
+    odomTopic: "dog_odom"                    # IMU pre-preintegration odometry, same frequency as IMU. /utlidar/robot_odom
     gpsTopic: "odometry/gpsz"                    # GPS odometry topic from navsat, see module_navsat.launch file
 
     # Frames
@@ -26,7 +26,7 @@
     savePCDDirectory: "/Downloads/LOAM/"         # in your home folder, starts and ends with "/". Warning: the code deletes "LOAM" folder then recreates it. See "mapOptimization" for implementation
 
     # Sensor Settings
-    sensor: velodyne                               # lidar sensor type, either 'velodyne', 'ouster' or 'livox'
+    sensor: velodyne                               # lidar sensor type, either 'velodyne', 'ouster' or 'livox' or 'hesai'
     N_SCAN: 16                                   # number of lidar channels (i.e., Velodyne/Ouster: 16, 32, 64, 128, Livox Horizon: 6)
     Horizon_SCAN: 1800                            # lidar horizontal resolution (Velodyne:1800, Ouster:512,1024,2048, Livox Horizon: 4000)
     downsampleRate: 1                            # default: 1. Downsample your data if too many
@@ -43,19 +43,13 @@
     imuGravity: 9.80511
     imuRPYWeight: 0.01
 
-    extrinsicTrans:  [ 0.0,  0.0,  -0.0103 ]
-    #extrinsicRot:    [-1.0,  0.0,  0.0,
-    #                   0.0,  1.0,  0.0,
-    #                   0.0,  0.0, -1.0 ]
-    #extrinsicRPY: [ 0.0,  1.0,  0.0,
-    #               -1.0,  0.0,  0.0,
-    #                0.0,  0.0,  1.0 ]
+    extrinsicTrans: [0.1710, 0.0, 0.0908]
     extrinsicRot: [1.0, 0.0, 0.0,
                   0.0, 1.0, 0.0,
                   0.0, 0.0, 1.0]
-    extrinsicRPY: [1.0, 0.0, 0.0,
-                  0.0, 1.0, 0.0,
-                  0.0, 0.0, 1.0]
+
+    extrinsicRPY: [0.0, 0.0, 0.0]
+
 
     # LOAM feature threshold
     edgeThreshold: 1.0
