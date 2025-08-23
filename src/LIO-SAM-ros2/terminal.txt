@@ -1,0 +1,22 @@
+pcl_viewer -bc 1,1,1 -ps 2 -ax 1 ~/Downloads/LOAM/cloudGlobal.pcd
+
+
+Terminal 1: 
+cd /unitree/module/graph_pid_ws
+source the install setup.bash
+unitree@ubuntu:/unitree/module/graph_pid_ws$ ./0_unitree_slam.sh
+
+Terminal 2: 
+unitree@ubuntu:~/hesai_ws$   ros2 launch hesai_ros_driver start.py
+
+Terminal 3:
+unitree@ubuntu:~/amberxu/comp9992_lio_sam/go2_slam_2d_3d/src/lidar_time_adapter$ ros2 launch lidar_time_adapter lidar_time_adapter.launch.py
+
+Terminal 4:
+unitree@ubuntu:~/amberxu/comp9992_lio_sam/go2_slam_2d_3d$ source install/setup.bash
+unitree@ubuntu:~/amberxu/comp9992_lio_sam/go2_slam_2d_3d$ ros2 launch lio_sam run.launch.py
+
+
+Terminal 5:
+pcl_viewer -bc 1,1,1 -ps 2 -ax 1 ~/Downloads/LOAM/cloudGlobal.pcd
+unitree@ubuntu:~/Downloads/LOAM$
