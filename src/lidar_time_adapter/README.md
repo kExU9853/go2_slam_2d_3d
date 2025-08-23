@@ -1,101 +1,100 @@
 # Lidar Time Adapter
 
-这个ROS2节点用于处理激光雷达点云数据，添加相对时间字段。
+This ROS2 node processes lidar point cloud data and adds relative time fields.
 
-## 功能
+## Features
 
-- 订阅 `/lidar_points` 话题
-- **NaN点清洗**：自动检测并移除包含NaN或Inf值的点，确保点云是dense
-- 读取现有的 `timestamp` 字段（支持多种数据类型）
-- 计算相对于本帧首点的时间（秒）
-- 添加新的 `time` 字段（float32类型）
-- 发布到 `/lidar_points_ready` 话题
-- **可选**：发布清洗后的点云到 `/lidar_points_clean` 话题
+- Subscribes to `/lidar_points` topic
+- **NaN Point Filtering**: Automatically detects and removes points containing NaN or Inf values, ensuring the point cloud is dense
+- Reads existing `timestamp` field (supports multiple data types)
+- Calculates relative time (seconds) from the first point in the frame
+- Adds new `time` field (float32 type)
+- Publishes to `/lidar_points_ready` topic
+- **Optional**: Publishes cleaned point cloud to `/lidar_points_clean` topic
 
-## 支持的timestamp数据类型
+## Supported Timestamp Data Types
 
-- UINT64
-- UINT32  
+- UINT32
 - FLOAT64
 - FLOAT32
 
-## 编译
+## Build
 
 ```bash
-# 在工作空间根目录
+# In workspace root directory
 colcon build --packages-select lidar_time_adapter
 ```
 
-## 运行
+## Run
 
-### 方法1：直接运行节点
+### Method 1: Direct node execution
 ```bash
 source install/setup.bash
 ros2 run lidar_time_adapter lidar_time_adapter_node
 ```
 
-### 方法2：使用启动文件
+### Method 2: Using launch file
 ```bash
 source install/setup.bash
 ros2 launch lidar_time_adapter lidar_time_adapter.launch.py
 ```
 
-## 话题
+## Topics
 
-### 订阅话题
+### Subscribed Topics
 - `/lidar_points` (sensor_msgs/msg/PointCloud2)
-  - 输入点云数据，必须包含 `timestamp` 字段
+  - Input point cloud data, must contain `timestamp` field
 
-### 发布话题
+### Published Topics
 - `/lidar_points_ready` (sensor_msgs/msg/PointCloud2)
-  - 输出点云数据，包含原始字段 + 新的 `time` 字段，已清洗NaN点
-- `/lidar_points_clean` (sensor_msgs/msg/PointCloud2) [可选]
-  - 仅清洗NaN点后的点云数据，不包含time字段
+  - Output point cloud data with original fields + new `time` field, NaN points filtered
+- `/lidar_points_clean` (sensor_msgs/msg/PointCloud2) [Optional]
+  - Point cloud data after NaN filtering only, without time field
 
-## 输出格式
+## Output Format
 
-输出的点云将包含以下字段：
-- x, y, z: 坐标
-- intensity: 强度
-- ring: 激光线束编号
-- timestamp: 原始时间戳
-- time: 相对时间（秒，相对于本帧首点）
+The output point cloud will contain the following fields:
+- x, y, z: coordinates
+- intensity: intensity values
+- ring: laser ring number
+- timestamp: original timestamp
+- time: relative time (seconds, relative to first point in frame)
 
-## 测试
+## Test
 
-### 运行测试
+### Run Tests
 ```bash
-# 方法1：使用测试启动文件
+# Method 1: Using test launch file
 ros2 launch lidar_time_adapter test_lidar_time_adapter.launch.py
 
-# 方法2：手动运行
-# 终端1：运行主节点
+# Method 2: Manual execution
+# Terminal 1: Run main node
 ros2 run lidar_time_adapter lidar_time_adapter_node
 
-# 终端2：运行测试脚本
+# Terminal 2: Run test script
 python3 src/lidar_time_adapter/test/test_lidar_time_adapter.py
 ```
 
-### 验证输出
-测试脚本会：
-1. 发布包含timestamp字段的测试点云到 `/lidar_points`
-2. 订阅 `/lidar_points_ready` 话题
-3. 验证输出点云是否包含新的 `time` 字段
+### Verify Output
+The test script will:
+1. Publish test point cloud with timestamp field to `/lidar_points`
+2. Subscribe to `/lidar_points_ready` topic
+3. Verify that output point cloud contains new `time` field
 
-## 参数配置
+## Parameter Configuration
 
 - `remove_nan_points` (bool, default: true)
-  - 是否启用NaN点清洗功能
+  - Whether to enable NaN point filtering
 - `publish_clean_topic` (bool, default: false)
-  - 是否发布清洗后的点云到额外话题
+  - Whether to publish cleaned point cloud to additional topic
 - `clean_topic_name` (string, default: "/lidar_points_clean")
-  - 清洗后点云的话题名称
+  - Topic name for cleaned point cloud
 
-## 注意事项
+## Notes
 
-1. 输入点云必须包含 `timestamp` 字段
-2. 时间戳假设为纳秒单位，会自动转换为秒
-3. 如果找不到有效的时间戳，节点会跳过该帧并输出警告
-4. 支持的timestamp数据类型：UINT32, FLOAT64, FLOAT32
-5. **NaN清洗功能**：自动检测并移除x、y、z坐标中的NaN和Inf值
-6. **Dense点云**：输出点云确保是dense（is_dense = true），无无效点
+1. Input point cloud must contain `timestamp` field
+2. Timestamp is assumed to be in nanoseconds and will be converted to seconds
+3. If no valid timestamp is found, the node will skip the frame and output a warning
+4. Supported timestamp data types: UINT32, FLOAT64, FLOAT32
+5. **NaN Filtering**: Automatically detects and removes NaN and Inf values in x, y, z coordinates
+6. **Dense Point Cloud**: Output point cloud is guaranteed to be dense (is_dense = true) with no invalid points

@@ -14,14 +14,14 @@ class TestPublisher(Node):
         self.get_logger().info('Test publisher started')
 
     def publish_test_data(self):
-        # 创建测试点云数据
+        # Create test point cloud data
         num_points = 1000
-        points = np.random.rand(num_points, 3) * 10.0  # 随机3D点
-        intensities = np.random.rand(num_points) * 255.0  # 随机强度
-        rings = np.random.randint(0, 64, num_points)  # 随机激光线束编号
-        timestamps = np.arange(num_points) * 1000  # 递增时间戳（纳秒）
+        points = np.random.rand(num_points, 3) * 10.0  # Random 3D points
+        intensities = np.random.rand(num_points) * 255.0  # Random intensity values
+        rings = np.random.randint(0, 64, num_points)  # Random laser ring numbers
+        timestamps = np.arange(num_points) * 1000  # Incremental timestamps (nanoseconds)
 
-        # 创建PointCloud2消息
+        # Create PointCloud2 message
         msg = PointCloud2()
         msg.header.frame_id = "hesai_lidar"
         msg.header.stamp = self.get_clock().now().to_msg()
@@ -30,7 +30,7 @@ class TestPublisher(Node):
         msg.is_dense = False
         msg.is_bigendian = False
 
-        # 定义字段
+        # Define fields
         msg.fields = [
             PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
             PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
@@ -43,7 +43,7 @@ class TestPublisher(Node):
         msg.point_step = 22  # 4+4+4+4+2+4 = 22 bytes
         msg.row_step = msg.point_step * msg.width
 
-        # 填充数据
+        # Fill data
         data = []
         for i in range(num_points):
             # x, y, z (float32)
@@ -68,7 +68,7 @@ class TestSubscriber(Node):
 
     def callback(self, msg):
         self.get_logger().info(f'Received processed point cloud: {msg.width} points, {len(msg.fields)} fields')
-        # 打印字段信息
+        # Print field information
         for field in msg.fields:
             self.get_logger().info(f'Field: {field.name}, type: {field.datatype}, offset: {field.offset}')
 

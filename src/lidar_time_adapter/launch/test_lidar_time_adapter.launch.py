@@ -4,12 +4,12 @@ from launch.actions import ExecuteProcess
 import os
 
 def generate_launch_description():
-    # 获取当前包的路径
+    # Get current package path
     pkg_path = os.path.join(os.getcwd(), 'src', 'lidar_time_adapter')
     test_script = os.path.join(pkg_path, 'test', 'test_lidar_time_adapter.py')
     
     return LaunchDescription([
-        # 启动主节点
+        # Start main node
         Node(
             package='lidar_time_adapter',
             executable='lidar_time_adapter_node',
@@ -17,7 +17,7 @@ def generate_launch_description():
             output='screen'
         ),
         
-        # 启动测试脚本
+        # Start test script
         ExecuteProcess(
             cmd=['python3', test_script],
             output='screen'

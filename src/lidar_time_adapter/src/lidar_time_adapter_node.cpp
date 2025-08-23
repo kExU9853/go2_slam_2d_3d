@@ -13,23 +13,23 @@ class LidarTimeAdapter : public rclcpp::Node
 public:
     LidarTimeAdapter() : Node("lidar_time_adapter")
     {
-        // 声明参数
+        // Declare parameters
         this->declare_parameter("remove_nan_points", true);
         this->declare_parameter("publish_clean_topic", false);
         this->declare_parameter("clean_topic_name", "/lidar_points_clean");
         
-        // 获取参数
+        // Get parameters
         remove_nan_points_ = this->get_parameter("remove_nan_points").as_bool();
         publish_clean_topic_ = this->get_parameter("publish_clean_topic").as_bool();
         clean_topic_name_ = this->get_parameter("clean_topic_name").as_string();
         
-        // 创建订阅者和发布者
+        // Create subscribers and publishers
         subscription_ = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "/lidar_points", 10, std::bind(&LidarTimeAdapter::pointcloud_callback, this, std::placeholders::_1));
         
         publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>("/lidar_points_ready", 10);
         
-        // 如果启用清洗话题，创建额外的发布者
+        // If clean topic is enabled, create additional publisher
         if (publish_clean_topic_)
         {
             clean_publisher_ = this->create_publisher<sensor_msgs::msg::PointCloud2>(clean_topic_name_, 10);
@@ -46,7 +46,7 @@ public:
     }
 
 private:
-    // 检查点是否为NaN
+    // Check if a point contains NaN values
     bool is_point_nan(const sensor_msgs::msg::PointCloud2::SharedPtr msg, size_t point_index, 
                       int x_offset, int y_offset, int z_offset)
     {
@@ -60,10 +60,10 @@ private:
                std::isinf(x) || std::isinf(y) || std::isinf(z);
     }
     
-    // 清洗NaN点并返回有效点的索引
+    // Filter NaN points and return indices of valid points
     std::vector<size_t> filter_nan_points(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
     {
-        // 找到x, y, z字段的偏移
+        // Find offsets for x, y, z fields
         int x_offset = -1, y_offset = -1, z_offset = -1;
         for (const auto& field : msg->fields)
         {
@@ -83,7 +83,7 @@ private:
             return all_indices;
         }
         
-        // 统计有效点
+        // Count valid points
         std::vector<size_t> valid_indices;
         for (size_t i = 0; i < msg->data.size(); i += msg->point_step)
         {
@@ -105,7 +105,7 @@ private:
     
     void pointcloud_callback(const sensor_msgs::msg::PointCloud2::SharedPtr msg)
     {
-        // 首先进行NaN清洗
+        // First perform NaN filtering
         std::vector<size_t> valid_indices;
         if (remove_nan_points_)
         {
@@ -113,7 +113,7 @@ private:
         }
         else
         {
-            // 如果不清洗NaN，使用所有点
+            // If not filtering NaN, use all points
             for (size_t i = 0; i < msg->data.size(); i += msg->point_step)
             {
                 valid_indices.push_back(i);
@@ -126,7 +126,7 @@ private:
             return;
         }
         
-        // 检查是否有timestamp字段
+        // Check if timestamp field exists
         bool has_timestamp = false;
         int timestamp_offset = -1;
         int timestamp_datatype = -1;
@@ -148,18 +148,18 @@ private:
             return;
         }
         
-        // 创建新的点云消息
+        // Create new point cloud message
         sensor_msgs::msg::PointCloud2 output_msg = *msg;
         
-        // 更新点云属性
+        // Update point cloud properties
         output_msg.width = valid_indices.size();
         output_msg.height = 1;
-        output_msg.is_dense = true;  // 确保是dense
+        output_msg.is_dense = true;  // Ensure it's dense
         
-        // 添加time字段
+        // Add time field
         sensor_msgs::msg::PointField time_field;
         time_field.name = "time";
-        time_field.offset = msg->point_step;  // 在现有字段后添加
+        time_field.offset = msg->point_step;  // Add after existing fields
         time_field.datatype = sensor_msgs::msg::PointField::FLOAT32;
         time_field.count = 1;
         
@@ -167,14 +167,14 @@ private:
         output_msg.point_step += 4;  // float32 = 4 bytes
         output_msg.row_step = output_msg.point_step * output_msg.width;
         
-        // 重新分配数据数组
+        // Reallocate data array
         output_msg.data.resize(valid_indices.size() * output_msg.point_step);
         
-        // 处理每个点
+        // Process each point
         uint64_t first_timestamp = 0;
         bool first_timestamp_set = false;
         
-        // 首先找到第一个有效的时间戳
+        // First find the first valid timestamp
         for (size_t valid_idx : valid_indices)
         {
             uint64_t timestamp = 0;
@@ -205,16 +205,16 @@ private:
             return;
         }
         
-        // 复制数据并添加时间字段
+        // Copy data and add time field
         for (size_t i = 0; i < valid_indices.size(); ++i)
         {
             size_t valid_idx = valid_indices[i];
             size_t output_idx = i * output_msg.point_step;
             
-            // 复制原始数据
+            // Copy original data
             std::memcpy(&output_msg.data[output_idx], &msg->data[valid_idx], msg->point_step);
             
-            // 计算相对时间
+            // Calculate relative time
             uint64_t timestamp = 0;
             if (timestamp_datatype == sensor_msgs::msg::PointField::UINT32)
             {
@@ -229,20 +229,20 @@ private:
                 timestamp = static_cast<uint64_t>(*reinterpret_cast<const float*>(&msg->data[valid_idx + timestamp_offset]));
             }
             
-            // 计算相对时间（秒）
+            // Calculate relative time (seconds)
             float relative_time = 0.0f;
             if (timestamp > first_timestamp)
             {
-                // 假设时间戳是纳秒，转换为秒
+                // Assume timestamp is in nanoseconds, convert to seconds
                 relative_time = static_cast<float>(timestamp - first_timestamp) / 1e9f;
             }
             
-            // 添加时间字段
+            // Add time field
             float* time_ptr = reinterpret_cast<float*>(&output_msg.data[output_idx + msg->point_step]);
             *time_ptr = relative_time;
         }
         
-        // 如果启用了清洗话题，发布清洗后的点云（不包含time字段）
+        // If clean topic is enabled, publish cleaned point cloud (without time field)
         if (publish_clean_topic_ && clean_publisher_)
         {
             sensor_msgs::msg::PointCloud2 clean_msg = *msg;
@@ -261,14 +261,14 @@ private:
             clean_publisher_->publish(clean_msg);
         }
         
-        // 发布处理后的点云
+        // Publish processed point cloud
         publisher_->publish(output_msg);
         
         RCLCPP_DEBUG(this->get_logger(), "Processed point cloud with %zu points, first timestamp: %lu", 
                      valid_indices.size(), first_timestamp);
     }
     
-    // 成员变量
+    // Member variables
     bool remove_nan_points_;
     bool publish_clean_topic_;
     std::string clean_topic_name_;
