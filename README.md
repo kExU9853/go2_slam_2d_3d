@@ -24,7 +24,7 @@ To get started with the Go2 SLAM, follow these steps:
 ### Clone the Repository
 
 ```bash
-git clone --recursive https://github.com/felixokolo/go2_slam_2d_3d
+git clone --recursive https://github.com/kExU9853/go2_slam_2d_3d
 ```
 
 ### Build
